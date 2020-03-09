@@ -1,0 +1,25 @@
+{
+  "name": "@time-with/time-picker",
+  "version": "1.0.0",
+  "description": "Simple React TimePicker",
+  "main": "dist/index.js",
+  "license": "MIT",
+  "author": "Antonio Brandao <antonio.brandao@timewith.co.uk>",
+  "scripts": {
+    "prepack": "yarn && babel src --out-dir dist --source-maps --presets es2015,stage-0,react && rm -rf node_modules",
+    "postpack": "rm -rf node_modules"
+  },
+  "devDependencies": {
+    "babel-plugin-emotion": "^10.0.7",
+    "babel-preset-es2015": "^6.24.1",
+    "babel-preset-react": "^6.24.1",
+    "babel-preset-stage-0": "^6.24.1"
+  },
+  "peerDependencies": {
+    "@emotion/core": "^10.0.7",
+    "@emotion/styled": "^10.0.7",
+    "@time-with/media-queries": "^1.0.3",
+    "date-fns": "^2.4.1",
+    "react": "^16.1.1"
+  }
+}
