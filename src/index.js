@@ -1,13 +1,13 @@
 import React, { Component } from 'react'
 import { differenceInMinutes, addMinutes, format, set } from 'date-fns'
 import styled from '@emotion/styled'
+import TimeField from 'react-simple-timefield'
 import { tablet_max, phablet_max, phone_max } from '@time-with/media-queries'
 
 const defaultMinHour = 7
 const defaultMinMinutes = 0
 const defaultMaxHour = 23
 const defaultMaxMinutes = 0
-const allowedCharacters = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'Backspace', 'Tab', 'ArrowLeft', 'ArrowRight', 'Delete']
 
 class TimePicker extends Component {
 
@@ -30,34 +30,25 @@ class TimePicker extends Component {
     }
     this.state = {
       selectOptions: options.selectOptions,
+      timeDisplay: `${currentHours}:${currentMinutes}`,
       time: {
         hours: currentHours,
         minutes: currentMinutes,
       },
     }
-    this.rightInputRef = React.createRef()
-    this.leftInputRef = React.createRef()
+    this.inputRef = React.createRef()
   }
 
   componentDidUpdate(prevProps) {
-    if (this.props.minHour !== prevProps.minHour || this.props.maxHour !== prevProps.maxHour) {
+    const inputsHaveFocus = this.inputRef.current === document.activeElement
+    const limitsChanged = this.props.minHour !== prevProps.minHour || this.props.maxHour !== prevProps.maxHour
+    if (!inputsHaveFocus && limitsChanged) {
       // handle changes in min and max hour
-      const updateObject = {}
-      // generate select options
-      updateObject.selectOptions = this.generateOptions().selectOptions
-      if (this.state.time.hours < this.props.minHour) {
-        // adjust time to new min
-        updateObject.time = {hours: this.props.minHour, minutes: this.state.time.minutes}
-      } else if (this.state.time.hours > this.props.maxHour) {
-        // adjust time to new max
-        updateObject.time = {hours: this.props.maxHour, minutes: this.state.time.minutes}
+      this.sanitiseValues()
+      // optional updateHandler
+      if (this.props.updateHandler) {
+        this.props.updateHandler(this.state)
       }
-      this.setState(updateObject)
-    }
-    // optional updateHandler
-    // only necessary if on each time change, updates are required elsewhere
-    if (this.props.updateHandler) {
-      this.props.updateHandler(this.state)
     }
   }
 
@@ -68,6 +59,24 @@ class TimePicker extends Component {
 
   componentWillUnmount() {
     window.removeEventListener('mousedown', this.handleMouseOutside)
+  }
+
+  sanitiseValues = () => {
+    const updateObject = {}
+    if (this.state.time.hours < this.props.minHour) {
+      // adjust time to new min
+      updateObject.time = {hours: this.props.minHour, minutes: this.state.time.minutes}
+      updateObject.timeDisplay = `${this.props.minHour}:${this.state.time.minutes}`
+    } else if (this.state.time.hours > this.props.maxHour) {
+      // adjust time to new max
+      updateObject.time = {hours: this.props.maxHour, minutes: this.state.time.minutes}
+      updateObject.timeDisplay = `${this.props.maxHour}:${this.state.time.minutes}`
+    }
+    if (Object.keys(updateObject).length > 0) {
+      // generate select options
+      updateObject.selectOptions = this.generateOptions().selectOptions
+      this.setState(updateObject)
+    }
   }
 
   generateOptions() {
@@ -136,7 +145,11 @@ class TimePicker extends Component {
 
   setTime = (time) => {
     // catch-all handler to pass time to the parent onChange
-    this.setState({time: time, drawerOpen: false}, () => this.props.onChange && this.props.onChange(time))
+    this.setState({
+      time: time,
+      timeDisplay: `${time.hours}:${time.minutes}`,
+      drawerOpen: false
+    }, () => this.props.onChange && this.props.onChange(time))
   }
 
   handleSelectOption = (e) => {
@@ -149,113 +162,30 @@ class TimePicker extends Component {
     this.setTime(time)
   }
 
-  autoSelectMinutesInput = () => {
-    // clicking on the ":" auto-focuses the minutes input
-    this.rightInputRef.current.focus()
-    this.rightInputRef.current.select()
-  }
-
-  handleLeftInputChange = (e) => {
-    // when reaching 2 characters on hours input, focus + select minutes input
-    if (e.target.value.length === 2) {
-      this.rightInputRef.current.focus()
-      this.rightInputRef.current.select()
-    }
-    // handle empty value
-    if (e.target.value === '') {
-      this.setTime({hours: '', minutes: this.state.time.minutes })
-      return
-    }
-    let newValue = parseInt(e.target.value, 10)
-    if (newValue > 24) {
-      // limit hours input to 23
-      this.setTime({hours: '23', minutes: this.state.time.minutes })
-    } else {
-      this.setTime({hours: newValue, minutes: this.state.time.minutes })
-    }
-  }
-
-  handleRightInputChange = (e) => {
-    let newValue = e.target.value !== '' ? parseInt(e.target.value, 10) : 0
-    // limit minutes input to max 59
-    if (parseInt(newValue, 10) > 59) {
-      newValue = 59
-    }
-    this.setTime({hours: this.state.time.hours, minutes: newValue })
-  }
-
-  handleLeftInputFocus = (e) => {
+  handleInputFocus = () => {
     // select hours content when clicking the hours input
-    this.setState({drawerOpen: true})
-    this.leftInputRef.current.focus()
-    this.leftInputRef.current.select()
+    this.setState({ drawerOpen: true })
   }
 
-  handleRightInputFocus = (e) => {
-    // select minutes content when clicking the hours input
-    this.setState({drawerOpen: true})
-    this.rightInputRef.current.focus()
-    this.rightInputRef.current.select()
-  }
-
-  limitCharacters = (e) => {
-    // focus minutes input if pressing SHIFT+TAB while in hours input + select text content
-    if (String(e.target.classList).indexOf('tw-time-picker-right') > -1 && e.key === 'Tab' && e.shiftKey) {    
-      this.leftInputRef.current.focus()
-      this.leftInputRef.current.select()
-      e.stopPropagation();
-      e.preventDefault();
-      return false   
-    }
-    // focus hours input if pressing TAB while in hours input + select text content
-    if (String(e.target.classList).indexOf('tw-time-picker-left') > -1 && e.key === 'Tab') {    
-      this.rightInputRef.current.focus()
-      this.rightInputRef.current.select()
-      e.stopPropagation();
-      e.preventDefault();
-      return false   
-    }
-    // prevent the input of unwanted characters
-    if (allowedCharacters.indexOf(e.key) === -1) {
-      e.stopPropagation();
-      e.preventDefault();
-      return false
-    }
+  onTimeChange = (_, time) => {
+    const timeStringSplit = time.split(':')
+    this.setTime({ hours: timeStringSplit[0], minutes: timeStringSplit[1] })
   }
 
   render () {
     const {
-      time,
+      timeDisplay,
       drawerOpen,
       selectOptions,
     } = this.state
     return(
       <RootDiv className='tw-time-picker-root'>
         <InputsRoot active={drawerOpen}>
-          <InputLeft
-            className='tw-time-picker-left'
-            onFocus={this.handleLeftInputFocus} 
-            type='text'
-            maxLength='2'
-            onKeyDown={this.limitCharacters}
-            value={String(time.hours).length === 1 ? `0${time.hours}` : time.hours}
-            ref={this.leftInputRef}
-            onChange={this.handleLeftInputChange} />
-          <InputCenter
-            className='tw-time-picker-input'
-            onFocus={this.autoSelectMinutesInput} 
-            type='text'
-            maxLength='1'
-            defaultValue=':' />
-          <InputRight
-            className='tw-time-picker-right'
-            onFocus={this.handleRightInputFocus} 
-            type='text' 
-            maxLength='2'
-            onKeyDown={this.limitCharacters}
-            value={String(time.minutes).length === 1 ? `0${time.minutes}` : time.minutes}
-            ref={this.rightInputRef}
-            onChange={this.handleRightInputChange} />
+          <TimeField
+            value={timeDisplay}
+            onChange={this.onTimeChange}
+            input={<Input onBlur={this.sanitiseValues} onFocus={this.handleInputFocus} ref={this.inputRef}/>}
+          />
         </InputsRoot>
         <SelectRoot numItems={selectOptions.length} active={drawerOpen} className='tw-time-picker-select-root'>
           {selectOptions}
@@ -336,7 +266,7 @@ const InputsRoot = styled.div(props => ({
 }))
 
 const Input = styled.input({
-  width: '35px',
+  width: '100%',
   height: '45px',
   backgroundColor: '#e7f1fb',
   outline: 'none',
@@ -349,18 +279,4 @@ const Input = styled.input({
   [tablet_max]: {
     height: '40px',
   },
-})
-
-const InputLeft = styled(Input)({
-  paddingLeft: '5px',
-})
-
-const InputRight = styled(Input)({
-  paddingRight: '5px',
-})
-
-const InputCenter = styled(Input)({
-  paddingLeft: '2px',
-  paddingRight: '2px',
-  width: '8px',
 })
