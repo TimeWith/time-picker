@@ -18,19 +18,21 @@ $ yarn add @time-with/time-picker
       
     <TimePicker
       step={15}
-      minHour={6}
-      maxHour={20}
-      value={this.state.eventTime}
-      onChange={this.handleEventTimeChange}
+      minTime={new Date()}
+      maxTime={new Date()}
+      value={new Date()}
+      format="HH:mm"
+      onChange={this.handleTimeChange}
     />
 
 
 ## Parameters
 
-      step      (number)
-      minHour   (number)
-      maxHour   (number)
-      value     (object) - {time: number, minutes: number}
+      step      (integer)
+      minTime   (date object)
+      maxTime   (date object)
+      value     (date object)
+      format    (string | optional) (Internally it uses the `format()` of `date-fns`. Format options [here](https://date-fns.org/v2.10.0/docs/format)
       onChange  (function)
 
 ## License
