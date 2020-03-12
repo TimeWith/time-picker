@@ -15,7 +15,7 @@ $ yarn add @time-with/time-picker
 ## Usage
 
     import TimePicker from '@time-with/time-picker'
-      
+
     <TimePicker
       step={15}
       minTime={new Date()}
@@ -27,13 +27,14 @@ $ yarn add @time-with/time-picker
 
 
 ## Parameters
-
-      step      (integer)
-      minTime   (date object)
-      maxTime   (date object)
-      value     (date object)
-      format    (string | optional) (Internally it uses the `format()` of `date-fns`. Format options [here](https://date-fns.org/v2.10.0/docs/format)
-      onChange  (function)
+| PropName | Type | Description |
+|:----------:|:----:|------------|
+| step     | int  | The step between time options|
+| minTime  | date | The min time |
+| maxTime  | date | The max time |
+| value    | date | The input value |
+| format   | string| How to format the time. Internally it uses the `format()` of `date-fns`. Format options [here](https://date-fns.org/v2.10.0/docs/format). |
+| onChange | func | On change handler |
 
 ## License
 
