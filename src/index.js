@@ -43,7 +43,7 @@ class TimePicker extends Component {
     }
   }
 
-  validateAndUpdateValues = () => { console.log(this.state.time, this.props)
+  validateAndUpdateValues = () => {
     // update time if out of bounds
     if (isBefore(this.state.time, this.props.minTime)) this.setTime(this.props.minTime)
     else if (isAfter(this.state.time, this.props.maxTime)) this.setTime(this.props.maxTime)
