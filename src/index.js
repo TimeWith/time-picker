@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import {
   addMinutes,
+  differenceInMinutes,
   format as formatTime,
   isEqual,
   isBefore,
@@ -17,9 +18,7 @@ class TimePicker extends Component {
     super(props)
     // generate options
     const options = this.generateOptions()
-    // set initial input value
-    const time = this.props.value || options.times[0]
-    this.state = { options, time }
+    this.state = { options, drawerOpen: false }
     this.inputRef = React.createRef()
   }
 
@@ -35,8 +34,8 @@ class TimePicker extends Component {
 
   componentDidUpdate(prevProps) {
     const inputsHaveFocus = this.inputRef.current === document.activeElement
-    const limitsChanged = !isEqual(this.props.minTime, prevProps.minTime)
-      || !isEqual(this.props.maxTime, prevProps.maxTime)
+    const limitsChanged = differenceInMinutes(this.props.minTime, prevProps.minTime) !== 0
+      || differenceInMinutes(this.props.maxTime, prevProps.maxTime) !== 0
 
     if (!inputsHaveFocus && limitsChanged) {
       this.validateAndUpdateValues()
@@ -68,7 +67,7 @@ class TimePicker extends Component {
     const selectOptions = timesArray.map((timeOption) => (
       <SelectOption
         key={timeOption.toString()}
-        onClick={() => this.setTime(timeOption)}
+        onClick={() => this.setState({ drawerOpen: false }, () => this.setTime(timeOption))}
         className='tw-time-picker-custom-option'
       >
         <PSmall>{formatTime(timeOption, format || 'HH:mm')}</PSmall>
@@ -102,11 +101,10 @@ class TimePicker extends Component {
     this.setTime(newTime)
   }
 
-  setTime = (time) => this.setState({ drawerOpen: false, time }, () => this.props.onChange && this.props.onChange(time))
+  setTime = time => this.props.onChange && this.props.onChange(time)
 
   render () {
     const {
-      time,
       drawerOpen,
       options,
     } = this.state
@@ -115,7 +113,7 @@ class TimePicker extends Component {
       <RootDiv className='tw-time-picker-root'>
         <InputsRoot active={drawerOpen}>
           <TimeField
-            value={formatTime(time, this.props.format || 'HH:mm')}
+            value={formatTime(this.props.value || options.times[0], this.props.format || 'HH:mm')}
             onChange={this.handleTimeUpdate}
             input={
               <Input
