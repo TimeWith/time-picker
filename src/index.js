@@ -97,7 +97,7 @@ class TimePicker extends Component {
 
   handleTimeUpdate = (_, time) => {
     const timeParts = time.split(':')
-    const newTime = set(this.state.time, { hours: timeParts[0], minutes: timeParts[1] })
+    const newTime = set(this.props.value, { hours: timeParts[0], minutes: timeParts[1] })
     this.setTime(newTime)
   }
 
