@@ -213,9 +213,10 @@ const Input = styled.input({
   outline: 'none',
   border: 'none',
   fontSize: '17px',
+  fontFamily: 'initial',
+  fontWeight: '500',
   lineHeight: '150%',
   color: '#4A4A4A',
-  fontWeight: '500',
   textAlign: 'center',
   [tablet_max]: {
     height: '40px',
