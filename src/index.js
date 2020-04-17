@@ -213,7 +213,7 @@ const Input = styled.input({
   outline: 'none',
   border: 'none',
   fontSize: '17px',
-  fontFamily: 'initial',
+  fontFamily: 'inherit',
   fontWeight: '500',
   lineHeight: '150%',
   color: '#4A4A4A',
